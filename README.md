@@ -23,7 +23,7 @@ its InSAR aspect ISCE supports data from many space-borne satellites and one
 air-borne platform.  We continue to increase the number of sensors supported.
 At this time the sensors that are supported are the following: ALOS, ALOS2,
 COSMO_SKYMED, ENVISAT, ERS, KOMPSAT5, RADARSAT1, RADARSAT2, RISAT1, Sentinel1,
-TERRASARX, and UAVSAR.
+TERRASARX, UAVSAR and SAOCOM1A.
 
 ## Contents
 
@@ -296,7 +296,7 @@ and then try "scons install" again.
 
 ### CMake (experimental)
 Make sure you have the following prerequisites:
-* CMake ≥ 3.12
+* CMake ≥ 3.13
 * GCC ≥ 4.8  (with C++11 support)
 * Python ≥ 3.5
 * Cython
@@ -681,6 +681,7 @@ The inputs are Sentinel GRD zipfiles
         <property name="epsg id">32618</property>
         <property name="geocode spacing">100</property>
         <property name="geocode interpolation method">bilinear</property>
+        <property name="apply thermal noise correction">True</property>
         <component name="reference">
         <property name="safe">$dir$/rtcApp/data/S1A_IW_GRDH_1SDV_20181221T225104_20181221T225129_025130_02C664_B46C.zip</property>
         <property name="orbit directory">$dir$/orbits</property>
