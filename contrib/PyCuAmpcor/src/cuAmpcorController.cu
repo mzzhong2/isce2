@@ -27,8 +27,8 @@ void cuAmpcorController::runAmpcor() {
     cuArrays<float3> *covImage, *covImageRun;
 
     // For debugging.
-    cuArrays<int> *corrValidCountImage;
-    cuArrays<float> *corrSumImage;
+    // cuArrays<int> *corrValidCountImage;
+    // cuArrays<float> *corrSumImage;
 
     int nWindowsDownRun = param->numberChunkDown * param->numberWindowDownInChunk;
     int nWindowsAcrossRun = param->numberChunkAcross * param->numberWindowAcrossInChunk;
