@@ -1,6 +1,6 @@
 PROJECT = CUAMPCOR
 
-LDFLAGS =  -lcuda -lcudart -lcufft -lcublas -lgdal
+LDFLAGS =  -lcuda -lcudart -lcufft -lgdal
 CXXFLAGS = -std=c++11 -fpermissive -fPIC -shared
 NVCCFLAGS = -std=c++11 -ccbin g++ -m64 \
     -gencode arch=compute_35,code=sm_35 \
