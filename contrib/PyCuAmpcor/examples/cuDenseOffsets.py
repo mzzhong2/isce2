@@ -259,7 +259,7 @@ def estimateOffsetField(reference, secondary, inps=None):
     ## Set Gross Offset ###
     if inps.gross == 0: # use static grossOffset
         print('Set constant grossOffset ({}, {})'.format(inps.azshift, inps.rgshift))
-        objOffset.setConstantGrossOffset(gross_offset_down, gross_offset_across)
+        objOffset.setConstantGrossOffset(inps.azshift, inps.rgshift)
 
     else: # use varying offset
         print("Set varying grossOffset from file {}".format(inps.gross_offset_file))
