@@ -15,7 +15,7 @@ from contrib.PyCuAmpcor.PyCuAmpcor import PyCuAmpcor
 
 EXAMPLE = '''example
   cuDenseOffsets.py -r ./merged/SLC/20151120/20151120.slc.full -s ./merged/SLC/20151214/20151214.slc.full
-      --referencexml ./reference/IW1.xml --outprefix ./merged/offsets/20151120_20151214/offset
+      --outprefix ./merged/offsets/20151120_20151214/offset
       --ww 256 --wh 256 --oo 32 --kw 300 --kh 100 --nwac 100 --nwdc 1 --sw 8 --sh 8 --gpuid 2
 '''
 
@@ -35,8 +35,6 @@ def createParser():
                         help='Reference image')
     parser.add_argument('-s', '--secondary',type=str, dest='secondary', required=True,
                         help='Secondary image')
-    parser.add_argument('-x', '--referencexml',type=str, dest='referencexml', required=False,
-                        help='Reference Image XML File')
 
     parser.add_argument('--op','--outprefix','--output-prefix', type=str, dest='outprefix',
                         default='offset', required=True,
@@ -84,11 +82,13 @@ def createParser():
     # gross offset
     gross = parser.add_argument_group('Initial gross offset')
     gross.add_argument('-g','--gross', type=int, dest='gross', default=0,
-                       help='Use gross offset or not')
+                       help='Use varying gross offset or not')
     gross.add_argument('--aa', type=int, dest='azshift', default=0,
                        help='Gross azimuth offset (default: %(default)s).')
     gross.add_argument('--rr', type=int, dest='rgshift', default=0,
                        help='Gross range offset (default: %(default)s).')
+    gross.add_argument('--gf', '--gross-file', type=str, dest='gross_offset_file',
+                       help='Varying gross offset input file')
 
     corr = parser.add_argument_group('Correlation surface')
     corr.add_argument('--corr-stat-size', type=int, dest='corr_stat_win_size', default=21,
@@ -180,7 +180,7 @@ def estimateOffsetField(reference, secondary, inps=None):
     print("image width:",width)
 
     # if using gross offset, adjust the margin
-    margin = inps.margin if inps.gross == 0 else max(inps.margin, inps.azshift, inps.rgshift)
+    margin = max(inps.margin, abs(inps.azshift), abs(inps.rgshift))
 
     # determine the number of windows down and across
     # that's also the size of the output offset field
@@ -188,7 +188,7 @@ def estimateOffsetField(reference, secondary, inps=None):
         else (length-2*margin-2*inps.srchgt-inps.winhgt)//inps.skiphgt
     objOffset.numberWindowAcross = inps.numWinAcross if inps.numWinAcross > 0 \
         else (width-2*margin-2*inps.srcwidth-inps.winwidth)//inps.skipwidth
-    print('output offset field size: {} by {}'.format(objOffset.numberWindowDown, objOffset.numberWindowAcross))
+    print('the number of windows: {} by {}'.format(objOffset.numberWindowDown, objOffset.numberWindowAcross))
 
     # window size
     objOffset.windowSizeHeight = inps.winhgt
@@ -257,20 +257,19 @@ def estimateOffsetField(reference, secondary, inps=None):
     objOffset.setupParams()
 
     ## Set Gross Offset ###
-    if inps.gross == 0:
-        print("Set constant grossOffset")
-        print("By default, the gross offsets are zero")
-        print("You can override the default values here")
-        gross_offset_down = inps.azshift
-        gross_offset_across = inps.rgshift
+    if inps.gross == 0: # use static grossOffset
+        print('Set constant grossOffset ({}, {})'.format(inps.azshift, inps.rgshift))
         objOffset.setConstantGrossOffset(gross_offset_down, gross_offset_across)
 
-    else:
-        print("Set varying grossOffset")
-        print("By default, the gross offsets are zero")
-        print("You can override the default grossDown and grossAcross arrays here")
-        objOffset.setVaryingGrossOffset(np.zeros(shape=grossDown.shape,dtype=np.int32),
-                                        np.zeros(shape=grossAcross.shape,dtype=np.int32))
+    else: # use varying offset
+        print("Set varying grossOffset from file {}".format(inps.gross_offset_file))
+        grossOffset = np.fromfile(inps.gross_offset_file, dtype=np.int32)
+        numberWindows = objOffset.numberWindowDown*objOffset.numberWindowAcross
+        if grossOffset.size != 2*numberWindows :
+            print('The input gross offsets do not match the number of windows {} by {} in int32 type'.format(objOffset.numberWindowDown, objOffset.numberWindowAcross))
+            return 0;
+        grossOffset.reshape(numberWindows, 2)
+        objOffset.setVaryingGrossOffset(grossOffset[:,0], grossOffset[:,1])
 
     # check
     objOffset.checkPixelInImageRange()
